@@ -20,7 +20,7 @@ class FGSM(Attack):
 
         Return : list of Successfully attacked Images
         """
-        images = images.clone().detach().to(self.device)
+        images = inputs.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
 
         # Intializing the mask
@@ -39,17 +39,13 @@ class FGSM(Attack):
         deltas = []
         for itr in range(iter):
             delta = attack(images=images, labels=labels, mask=mask)
-            deltas.append(delta)
-
-        # Successfull Attacks
-        successful_deltas = []
-        for delta in deltas:
+            # Checking the success...
             outputs = self.get_logits(images + delta)
             new_labels = torch.argmax(outputs, dim=1)
             if (labels != new_labels and ~self.targeted) or (labels == new_labels and self.targeted):
-                successful_deltas.append(delta)
+                deltas.append(delta)
         
-        return successful_deltas
+        return deltas
 
 
 def attack(self, images, labels, mask):
